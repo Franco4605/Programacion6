@@ -2,6 +2,9 @@
 using Programacion6.Models;
 using System.Data.SqlClient;
 
+
+
+
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace Programacion6.Controllers
@@ -12,6 +15,68 @@ namespace Programacion6.Controllers
     {
 
         string connectionString = "Server=DESKTOP-IKDJ719;Database=ParcialProg6; Trusted_Connection=true;TrustServerCertificate=true;";
+
+        [HttpPost]
+        [Route("CrearOrdenes2")]
+        public bool crearOrdenes(Choferes C)
+        {
+
+            string query = "INSERT INTO Choferes (Nombre, Edad, Apellido, Unidad, DNI) VALUES (@Nombre, @Edad, @Apellido, @Unidad, @DNI)";
+            using (SqlConnection sqlConn = new SqlConnection(connectionString))
+            {
+                sqlConn.Open();
+                SqlCommand cm = new SqlCommand(query, sqlConn);
+
+                cm.Parameters.AddWithValue("@IdChofer", C.IdChofer);
+                cm.Parameters.AddWithValue("@Nombre", C.Nombre);
+                cm.Parameters.AddWithValue("@Edad", C.Edad);
+                cm.Parameters.AddWithValue("@Apellido", C.Apellido);
+                cm.Parameters.AddWithValue("@Unidad", C.Unidad);
+                cm.Parameters.AddWithValue("@DNI", C.DNI);
+
+                cm.ExecuteNonQuery();
+            }
+
+            return true;
+        }
+
+
+
+        [HttpPost]
+[Route("CrearOrden")]
+        public string crearOrden(Choferes C)
+        {
+            string query = "INSERT INTO Choferes (Nombre, Edad, Apellido, Unidad, DNI) VALUES (@Nombre, @Edad, @Apellido, @Unidad, @DNI)";
+
+            using (SqlConnection sqlConn = new SqlConnection(connectionString))
+            {
+                sqlConn.Open();
+                SqlCommand CM = new SqlCommand(query, sqlConn);
+
+                CM.Parameters.AddWithValue("@Nombre", C.Nombre);
+                CM.Parameters.AddWithValue("@Edad", C.Edad);
+                CM.Parameters.AddWithValue("@Apellido", C.Apellido);
+                CM.Parameters.AddWithValue("@Unidad", C.Unidad);
+                CM.Parameters.AddWithValue("@DNI", C.DNI);
+
+                if (CM.ExecuteNonQuery() == 1)
+                {
+                    sqlConn.Close();
+                    return "{\"resultado\":\"OK\"}";
+                }
+                else
+                {
+                    sqlConn.Close();
+                    return "{\"resultado\":\"NOK\"}";
+                }
+            }
+        }
+
+
+
+
+
+
         [HttpGet]
         [Route("getChoferes")]
         public List<Choferes> getChoferes()
@@ -48,42 +113,46 @@ namespace Programacion6.Controllers
             return LH;
         }
 
-
-
-
-
-
-
-        // GET: api/<ChoferesController>
         [HttpGet]
-        public IEnumerable<string> Get()
+        [Route("getChoferesUnidad")]
+        public List<Choferes> getChoferesUnidad(string Unidad)
         {
-            return new string[] { "value1", "value2" };
-        }
+            List<Choferes> lh = new List<Choferes>();
 
-        // GET api/<ChoferesController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
-        }
+            // Utiliza parámetros en la consulta SQL para evitar la inyección de SQL
+            string Query = "SELECT IdChofer, Nombre, EDAD, Apellido, Unidad, DNI FROM Choferes WHERE Unidad = @Unidad";
 
-        // POST api/<ChoferesController>
-        [HttpPost]
-        public void Post([FromBody] string value)
-        {
-        }
+            using (SqlConnection sqlConn = new SqlConnection(connectionString))
+            {
+                sqlConn.Open();
+                using (SqlCommand sqlCM = new SqlCommand(Query, sqlConn))
+                {
+                    sqlCM.Parameters.AddWithValue("@Unidad", Unidad);
+                    SqlDataReader dr = sqlCM.ExecuteReader();
 
-        // PUT api/<ChoferesController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
+                    while (dr.Read())
+                    {
+                        Choferes oh = new Choferes();
+                        oh.IdChofer = int.Parse(dr[0].ToString());
+                        oh.Nombre = dr[1].ToString();
+                        oh.Edad = int.Parse(dr[2].ToString());
+                        oh.Apellido = dr[3].ToString();
+                        oh.Unidad = dr[4].ToString();
+                        oh.DNI = int.Parse(dr[5].ToString());
 
-        // DELETE api/<ChoferesController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
+                        lh.Add(oh);
+                    }
+                }
+            }
+
+            return lh;
         }
     }
 }
+
+
+
+
+
+// GET: api/<ChoferesController>
+
